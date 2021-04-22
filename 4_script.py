@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import math
 import scipy.io
 import RPi.GPIO as GPIO
-import time
-
+import time as tm
 
 num_bits = 8
 
@@ -63,10 +62,40 @@ def makesin(time, freq, samplingFrequency):
     plt.show()
     return cords
 
-samplerate, data = wavfile.read("/home/student/Downloads/SOUND.WAV")
+samplerate, data = wavfile.read("/home/student/Desktop/ADC/DAC/SOUND.WAV")
 
 print("Частота дискретизации = ", samplerate)
 print(f"Количество каналов = {data.shape[1]}")
 channels = data.shape[1]
 length = float(data.shape[0] / samplerate)
 print(f"Длительность = {length}с")
+samperiod = 1 / samplerate
+number = int(length / (samperiod))
+print(number)
+minimum = 0
+maximum = 0
+for i in range(0, number, 1):
+    if(data[i, 1] < minimum):
+        minimum = data[i, 0]
+    if(data[i, 1] > maximum):
+        maximum = data[i, 0]
+
+maximum = float(maximum / 10)
+minimum = float(minimum / 10)
+
+cords = [0 for i in range(number)]
+read = [0 for i in range(number)]
+
+for i in range(0, number, 1):
+    read[i] = float(data[i, 1] / 10)
+    cords[i] = int(256 * (read[i] - minimum)/(maximum - minimum))
+
+time = np.linspace(0., length, data.shape[0])
+plt.plot(time, cords[:])
+plt.xlabel("Time [s]")
+plt.ylabel("Amplitude")
+plt.show()
+
+for i in range(0, number, 1):
+    num2dac(cords[i])
+    tm.sleep(0)
